@@ -1,7 +1,12 @@
-all: hls gulf_stream storage_server device_tree bit_file binary
+all: set_parameters hls gulf_stream storage_server bit_file binary device_tree
+
+no_outputs: set_half_parameters hls gulf_stream storage_server
 
 hls: 
 	$(MAKE) -C ip_repo/hls_ips
+
+set_half_parameters:
+	python ship_params.py
 
 gulf_stream:
 	rm -rf repos/GULF-Stream
@@ -11,13 +16,23 @@ gulf_stream:
 	$(MAKE) -C repos/GULF-Stream clean_all
 	$(MAKE) -C repos/GULF-Stream GULF_Stream_IPCore
 
+set_parameters:
+	python ship_params.py
+	python num_cores_only.py
+
 storage_server:
 	rm -rf SHIP_hardware
+	if [ ! -f ip_addr.txt ]; then python ship_params.py; fi
+	if [ ! -f gateway_addr.txt ]; then python ship_params.py; fi
+	if [ ! -f mac_addr.txt ]; then python ship_params.py; fi
+	if [ ! -f subnet.txt ]; then python ship_params.py; fi
 	vivado -mode tcl -source src/tcl/ship.tcl -nolog -nojournal
 
 bit_file:
 	if [ ! -d output_products ]; then	mkdir output_products; fi
+	if [ ! -f num_cores.txt ]; then python num_cores_only.py; fi
 	vivado -mode tcl -source src/tcl/make_output.tcl -nolog -nojournal
+	rm num_cores.txt
 
 binary:
 	if [ ! -d output_products ]; then	mkdir output_products; fi
@@ -29,6 +44,11 @@ device_tree:
 
 clean:
 	$(MAKE) -C ip_repo/hls_ips clean
+	rm ip_addr.txt
+	rm gateway_addr.txt
+	rm mac_addr.txt
+	rm subnet.txt
+	rm num_cores.txt
 	rm -rf repos
 	rm -rf SHIP_hardware
 	rm -rf output_products
