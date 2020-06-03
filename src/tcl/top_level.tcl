@@ -1,11 +1,15 @@
 #build the top level
 
 #create external pins
+create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:diff_clock_rtl:1.0 ddr_clk_DS
 create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:diff_clock_rtl:1.0 pcie_clk
 create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:diff_clock_rtl:1.0 gt_ref
 create_bd_intf_port -mode Slave -vlnv xilinx.com:interface:diff_clock_rtl:1.0 init
 
 create_bd_intf_port -mode Slave -vlnv xilinx.com:display_cmac_usplus:gt_ports:2.0 gt_rx
+
+create_bd_intf_port -mode Master -vlnv xilinx.com:interface:ddr4_rtl:1.0 C0_DDR4
+
 create_bd_intf_port -mode Master -vlnv xilinx.com:display_cmac_usplus:gt_ports:2.0 gt_tx
 
 create_bd_intf_port -mode Master -vlnv xilinx.com:interface:pcie_7x_mgt_rtl:1.0 pcie_ports
@@ -13,6 +17,7 @@ create_bd_intf_port -mode Master -vlnv xilinx.com:interface:pcie_7x_mgt_rtl:1.0 
 #configure external ports
 
 set_property CONFIG.FREQ_HZ 322265625 [get_bd_intf_ports /gt_ref]
+set_property CONFIG.FREQ_HZ 333222000 [get_bd_intf_ports /ddr_clk_DS]
 
 #create the cells
 create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 base_address
@@ -23,6 +28,8 @@ create_bd_cell -type hier ack_handler
 create_bd_cell -type hier roce_sector
 
 #make pins in hierarcy cells
+
+create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:diff_clock_rtl:1.0 Shell/ddr_clk
 
 create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:diff_clock_rtl:1.0 Shell/pcie_clk
 
@@ -37,10 +44,12 @@ create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 Shell/sw_
 create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 Shell/mem_pages_free
 
 create_bd_pin -dir O Shell/pl_reset
-create_bd_pin -dir O Shell/reset_266mhz
-create_bd_pin -dir O Shell/clk_266mhz
+create_bd_pin -dir O Shell/reset_200mhz
+create_bd_pin -dir O Shell/clk_200mhz
 create_bd_pin -dir I Shell/clk_network
 create_bd_pin -dir I Shell/reset_network
+
+create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:ddr4_rtl:1.0 Shell/ddr4
 
 create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:pcie_7x_mgt_rtl:1.0 Shell/pcie_ports
 
@@ -64,8 +73,8 @@ create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 ack_handl
 create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 ack_handler/write_ack
 create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 ack_handler/ps_ack
 
-create_bd_pin -dir I ack_handler/clk_266mhz
-create_bd_pin -dir I ack_handler/reset_266mhz
+create_bd_pin -dir I ack_handler/clk_200mhz
+create_bd_pin -dir I ack_handler/reset_200mhz
 
 create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:diff_clock_rtl:1.0 roce_sector/gt_ref
 create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:diff_clock_rtl:1.0 roce_sector/init
@@ -95,13 +104,13 @@ create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 roce_sect
 create_bd_pin -dir O roce_sector/clk_network
 create_bd_pin -dir O roce_sector/reset_network
 
-create_bd_pin -dir I roce_sector/clk_266mhz
-create_bd_pin -dir I roce_sector/reset_266mhz
+create_bd_pin -dir I roce_sector/clk_200mhz
+create_bd_pin -dir I roce_sector/reset_200mhz
 create_bd_pin -dir I roce_sector/reset_global
 
-create_bd_pin -dir I write_sector/clk_266mhz
-create_bd_pin -dir I write_sector/reset_266mhz
-create_bd_pin -dir I -from 31 -to 0 write_sector/base_address
+create_bd_pin -dir I write_sector/clk_200mhz
+create_bd_pin -dir I write_sector/reset_200mhz
+create_bd_pin -dir I -from 63 -to 0 write_sector/base_address
 
 create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 write_sector/malloc
 create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 write_sector/change_queue
@@ -115,9 +124,9 @@ create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 write_se
 
 create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 write_sector/memory_write_port
 
-create_bd_pin -dir I read_sector/clk_266mhz
-create_bd_pin -dir I read_sector/reset_266mhz
-create_bd_pin -dir I -from 31 -to 0 read_sector/base_address
+create_bd_pin -dir I read_sector/clk_200mhz
+create_bd_pin -dir I read_sector/reset_200mhz
+create_bd_pin -dir I -from 63 -to 0 read_sector/base_address
 
 create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 read_sector/request
 create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 read_sector/flags
@@ -134,9 +143,11 @@ create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 read_sec
 create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 read_sector/rrh_to_mem
 
 #configure blocks
-set_property -dict [list CONFIG.CONST_WIDTH {32} CONFIG.CONST_VAL {0}] [get_bd_cells base_address]
+set_property -dict [list CONFIG.CONST_WIDTH {64} CONFIG.CONST_VAL {0x1000000000}] [get_bd_cells base_address]
 
 #apply interface connections
+connect_bd_intf_net [get_bd_intf_ports ddr_clk_DS] -boundary_type upper [get_bd_intf_pins Shell/ddr_clk]
+connect_bd_intf_net [get_bd_intf_ports C0_DDR4] -boundary_type upper [get_bd_intf_pins Shell/ddr4]
 connect_bd_intf_net [get_bd_intf_ports pcie_ports] -boundary_type upper [get_bd_intf_pins Shell/pcie_ports]
 connect_bd_intf_net [get_bd_intf_ports gt_ref] -boundary_type upper [get_bd_intf_pins roce_sector/gt_ref]
 connect_bd_intf_net [get_bd_intf_ports init] -boundary_type upper [get_bd_intf_pins roce_sector/init]
@@ -184,13 +195,13 @@ connect_bd_net [get_bd_pins base_address/dout] [get_bd_pins write_sector/base_ad
 
 connect_bd_net [get_bd_pins Shell/pl_reset] [get_bd_pins roce_sector/reset_global] -boundary_type upper
 
-connect_bd_net [get_bd_pins Shell/clk_266mhz] [get_bd_pins roce_sector/clk_266mhz] -boundary_type upper
-connect_bd_net [get_bd_pins Shell/clk_266mhz] [get_bd_pins read_sector/clk_266mhz] -boundary_type upper
-connect_bd_net [get_bd_pins Shell/clk_266mhz] [get_bd_pins write_sector/clk_266mhz] -boundary_type upper
-connect_bd_net [get_bd_pins Shell/clk_266mhz] [get_bd_pins ack_handler/clk_266mhz] -boundary_type upper
+connect_bd_net [get_bd_pins Shell/clk_200mhz] [get_bd_pins roce_sector/clk_200mhz] -boundary_type upper
+connect_bd_net [get_bd_pins Shell/clk_200mhz] [get_bd_pins read_sector/clk_200mhz] -boundary_type upper
+connect_bd_net [get_bd_pins Shell/clk_200mhz] [get_bd_pins write_sector/clk_200mhz] -boundary_type upper
+connect_bd_net [get_bd_pins Shell/clk_200mhz] [get_bd_pins ack_handler/clk_200mhz] -boundary_type upper
 
-connect_bd_net [get_bd_pins Shell/reset_266mhz] [get_bd_pins roce_sector/reset_266mhz] -boundary_type upper
-connect_bd_net [get_bd_pins Shell/reset_266mhz] [get_bd_pins read_sector/reset_266mhz] -boundary_type upper
-connect_bd_net [get_bd_pins Shell/reset_266mhz] [get_bd_pins write_sector/reset_266mhz] -boundary_type upper
-connect_bd_net [get_bd_pins Shell/reset_266mhz] [get_bd_pins ack_handler/reset_266mhz] -boundary_type upper
+connect_bd_net [get_bd_pins Shell/reset_200mhz] [get_bd_pins roce_sector/reset_200mhz] -boundary_type upper
+connect_bd_net [get_bd_pins Shell/reset_200mhz] [get_bd_pins read_sector/reset_200mhz] -boundary_type upper
+connect_bd_net [get_bd_pins Shell/reset_200mhz] [get_bd_pins write_sector/reset_200mhz] -boundary_type upper
+connect_bd_net [get_bd_pins Shell/reset_200mhz] [get_bd_pins ack_handler/reset_200mhz] -boundary_type upper
 
